@@ -15,6 +15,8 @@ public class RevenuePredictor{
   static Map<Integer,Double> cpiMap = new HashMap<Integer, Double>();
   static List<Map<String, Integer>> movieList = new ArrayList<Map<String, Integer>>();
   static List<Map<String, Integer>> movieListAdjusted = new ArrayList<Map<String, Integer>>();
+  static List<Map<String, Boolean>> movieListFormatted = new ArrayList<Map<String, Boolean>>();
+  static Map<String, Integer> movieListAverages = new HashMap<String, Integer>();
   static int[] missingYears = new int[]{2015, 2016, 2017, 2018, 2019, 2020};
   static double[] missingCPIs = new double[]{233.707, 236.916, 242.839, 247.876, 251.712, 257.971};
 
@@ -23,19 +25,89 @@ public class RevenuePredictor{
     initializeMovies();
     initializeCPI();
     createAdjusted();
-    //System.out.println("cpiMap: "+cpiMap);
-    //System.out.println("movieList: "+movieList);
-    System.out.println("movieListAdjusted: "+movieListAdjusted);
+    createAverages();
+    formatData();
+    System.out.println("movieListFormatted: "+movieListFormatted);
 
   }
 
   public static double adjustInflation(int val, int year){
-    System.out.println("val: "+val);
+
     double cpi = cpiMap.get(year);
-    System.out.println("cpi: "+cpi);
     double valAdjusted = (100/cpi)*val;
-    System.out.println("valAdjusted: "+valAdjusted);
+
     return valAdjusted;
+  }
+
+  public static boolean compareActor1(int val){
+    if(val >= movieListAverages.get("actor_1_avg")){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+  public static boolean compareActor2(int val){
+    if(val >= movieListAverages.get("actor_2_avg")){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+  public static boolean compareActor3(int val){
+    if(val >= movieListAverages.get("actor_3_avg")){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+  public static boolean compareBudget(int val){
+    if(val >= movieListAverages.get("budget_avg")){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+  public static boolean compareCritic(int val){
+    if(val >= movieListAverages.get("critic_avg")){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+  public static boolean compareDirector(int val){
+    if(val >= movieListAverages.get("director_avg")){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+  public static boolean compareGross(int val){
+    if(val >= movieListAverages.get("gross_avg")){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+  public static boolean compareUsers(int val){
+    if(val >= movieListAverages.get("voted_users_avg")){
+      return true;
+    }
+    else{
+      return false;
+    }
   }
 
   public static boolean containsNull(String[] lineArray){
@@ -69,11 +141,75 @@ public class RevenuePredictor{
       record.replace("budget", adjustedBudget);
       record.replace("gross", adjustedGross);
 
-      System.out.println("adjustedBudget: "+adjustedBudget);
-      //System.out.println("adjustedGross: "+adjustedGross);
-
       movieListAdjusted.add(0, record);
     }
+  }
+
+  public static void createAverages(){
+
+    int movieSize = movieList.size();
+    int director_accumulate = 0;
+    int actor1_accumulate = 0;
+    int actor2_accumulate = 0;
+    int actor3_accumulate = 0;
+    int critic_accumulate = 0;
+    int voted_users_accumulate = 0;
+    int budget_accumulate = 0;
+    double gross_accumulate = 0;
+
+    for(int i = 0; i < movieSize; i++){
+
+      Map<String,Integer> record = new HashMap<String, Integer>(movieListAdjusted.get(i));
+
+      director_accumulate += record.get("director_facebook_likes");
+      actor1_accumulate += record.get("actor_1_facebook_likes");
+      actor2_accumulate += record.get("actor_2_facebook_likes");
+      actor3_accumulate += record.get("actor_3_facebook_likes");
+      critic_accumulate += record.get("num_critic_for_reviews");
+      voted_users_accumulate += record.get("num_voted_users");
+      budget_accumulate += record.get("budget");
+      gross_accumulate += (double)record.get("gross");
+    }
+
+    movieListAverages.put("director_avg", director_accumulate/movieSize);
+    movieListAverages.put("actor_1_avg", actor1_accumulate/movieSize);
+    movieListAverages.put("actor_2_avg", actor2_accumulate/movieSize);
+    movieListAverages.put("actor_3_avg", actor3_accumulate/movieSize);
+    movieListAverages.put("critic_avg", critic_accumulate/movieSize);
+    movieListAverages.put("voted_users_avg", voted_users_accumulate/movieSize);
+    movieListAverages.put("budget_avg", budget_accumulate/movieSize);
+    movieListAverages.put("gross_avg", (int)gross_accumulate/movieSize);
+  }
+
+  public static void formatData(){
+
+    int movieSize = movieList.size();
+    for(int i = 0; i < movieSize; i++){
+      Map<String,Integer> record = new HashMap<String, Integer>(movieListAdjusted.get(i));
+      Map<String,Boolean> formattedRecord = new HashMap<String, Boolean>();
+
+      boolean actor1 = compareActor1(record.get("actor_1_facebook_likes"));
+      boolean actor2 = compareActor2(record.get("actor_2_facebook_likes"));
+      boolean actor3 = compareActor2(record.get("actor_3_facebook_likes"));
+      boolean director = compareDirector(record.get("director_facebook_likes"));
+      boolean gross = compareGross(record.get("gross"));
+      boolean budget = compareBudget(record.get("budget"));
+      boolean voted_users = compareUsers(record.get("num_voted_users"));
+      boolean critics = compareUsers(record.get("num_critic_for_reviews"));
+
+      formattedRecord.put("actor_1_facebook_likes", actor1);
+      formattedRecord.put("actor_2_facebook_likes", actor2);
+      formattedRecord.put("actor_3_facebook_likes", actor3);
+      formattedRecord.put("budget", budget);
+      formattedRecord.put("director_facebook_likes", director);
+      formattedRecord.put("gross", gross);
+      formattedRecord.put("num_critic_for_reviews", critics);
+      formattedRecord.put("num_voted_users", voted_users);
+
+      movieListFormatted.add(formattedRecord);
+    }
+
+
   }
 
   public static void initializeCPI() throws Exception{
@@ -121,7 +257,7 @@ public class RevenuePredictor{
     int year = date.getYear();
     double consumerIndex = Double.parseDouble(lineArray[1]);
 
-    System.out.println("Year: "+year);
+    //System.out.println("Year: "+year);
 
     cpiMap.put(year, consumerIndex);
     //cpiList.add(0, record);
