@@ -9,16 +9,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.time.LocalDate;
+import java.util.Random;
 
 public class RevenuePredictor{
 
   static Map<Integer,Double> cpiMap = new HashMap<Integer, Double>();
   static List<Map<String, Integer>> movieList = new ArrayList<Map<String, Integer>>();
   static List<Map<String, Integer>> movieListAdjusted = new ArrayList<Map<String, Integer>>();
-  static List<Map<String, Boolean>> movieListFormatted = new ArrayList<Map<String, Boolean>>();
+  static List<Map<String, Integer>> movieListFormatted = new ArrayList<Map<String, Integer>>();
   static Map<String, Integer> movieListAverages = new HashMap<String, Integer>();
   static int[] missingYears = new int[]{2015, 2016, 2017, 2018, 2019, 2020};
   static double[] missingCPIs = new double[]{233.707, 236.916, 242.839, 247.876, 251.712, 257.971};
+  //static Map<String,Integer> randWeights = new HashMap<String, Integer>();
 
   public static void main(String[] args) throws Exception{
 
@@ -27,7 +29,8 @@ public class RevenuePredictor{
     createAdjusted();
     createAverages();
     formatData();
-    System.out.println("movieListFormatted: "+movieListFormatted);
+    perceptronLearning();
+    //System.out.println("movieListFormatted: "+movieListFormatted);
 
   }
 
@@ -39,74 +42,74 @@ public class RevenuePredictor{
     return valAdjusted;
   }
 
-  public static boolean compareActor1(int val){
+  public static int compareActor1(int val){
     if(val >= movieListAverages.get("actor_1_avg")){
-      return true;
+      return 1;
     }
     else{
-      return false;
+      return 0;
     }
   }
-  public static boolean compareActor2(int val){
+  public static int compareActor2(int val){
     if(val >= movieListAverages.get("actor_2_avg")){
-      return true;
+      return 1;
     }
     else{
-      return false;
+      return 0;
     }
   }
 
-  public static boolean compareActor3(int val){
+  public static int compareActor3(int val){
     if(val >= movieListAverages.get("actor_3_avg")){
-      return true;
+      return 1;
     }
     else{
-      return false;
+      return 0;
     }
   }
 
-  public static boolean compareBudget(int val){
+  public static int compareBudget(int val){
     if(val >= movieListAverages.get("budget_avg")){
-      return true;
+      return 1;
     }
     else{
-      return false;
+      return 0;
     }
   }
 
-  public static boolean compareCritic(int val){
+  public static int compareCritic(int val){
     if(val >= movieListAverages.get("critic_avg")){
-      return true;
+      return 1;
     }
     else{
-      return false;
+      return 0;
     }
   }
 
-  public static boolean compareDirector(int val){
+  public static int compareDirector(int val){
     if(val >= movieListAverages.get("director_avg")){
-      return true;
+      return 1;
     }
     else{
-      return false;
+      return 0;
     }
   }
 
-  public static boolean compareGross(int val){
+  public static int compareGross(int val){
     if(val >= movieListAverages.get("gross_avg")){
-      return true;
+      return 1;
     }
     else{
-      return false;
+      return 0;
     }
   }
 
-  public static boolean compareUsers(int val){
+  public static int compareUsers(int val){
     if(val >= movieListAverages.get("voted_users_avg")){
-      return true;
+      return 1;
     }
     else{
-      return false;
+      return 0;
     }
   }
 
@@ -186,16 +189,16 @@ public class RevenuePredictor{
     int movieSize = movieList.size();
     for(int i = 0; i < movieSize; i++){
       Map<String,Integer> record = new HashMap<String, Integer>(movieListAdjusted.get(i));
-      Map<String,Boolean> formattedRecord = new HashMap<String, Boolean>();
+      Map<String,Integer> formattedRecord = new HashMap<String, Integer>();
 
-      boolean actor1 = compareActor1(record.get("actor_1_facebook_likes"));
-      boolean actor2 = compareActor2(record.get("actor_2_facebook_likes"));
-      boolean actor3 = compareActor2(record.get("actor_3_facebook_likes"));
-      boolean director = compareDirector(record.get("director_facebook_likes"));
-      boolean gross = compareGross(record.get("gross"));
-      boolean budget = compareBudget(record.get("budget"));
-      boolean voted_users = compareUsers(record.get("num_voted_users"));
-      boolean critics = compareUsers(record.get("num_critic_for_reviews"));
+      int actor1 = compareActor1(record.get("actor_1_facebook_likes"));
+      int actor2 = compareActor2(record.get("actor_2_facebook_likes"));
+      int actor3 = compareActor2(record.get("actor_3_facebook_likes"));
+      int director = compareDirector(record.get("director_facebook_likes"));
+      int gross = compareGross(record.get("gross"));
+      int budget = compareBudget(record.get("budget"));
+      int voted_users = compareUsers(record.get("num_voted_users"));
+      int critics = compareUsers(record.get("num_critic_for_reviews"));
 
       formattedRecord.put("actor_1_facebook_likes", actor1);
       formattedRecord.put("actor_2_facebook_likes", actor2);
@@ -290,4 +293,104 @@ public class RevenuePredictor{
 
     movieList.add(0, record);
   }
+
+  //------------------*** PERCEPTRON LEARNING ***----------------------------//
+
+  public static boolean allClassified(Map<String, Integer>randWeights){
+
+    int i = 0;
+    while(i < movieListFormatted.size()){
+      if(!mappingWorks(movieListFormatted.get(i), randWeights)){
+        return false;
+      }
+      i++
+    }
+    return true;
+  }
+
+  public static void createRandWeights(){
+
+    Random rand = new Random();
+    //Map<String,Integer> randWeights = new HashMap<String, Integer>();
+
+    randWeights.put("actor_1_facebook_likes", rand.nextInt(50));
+    randWeights.put("actor_2_facebook_likes", rand.nextInt(50));
+    randWeights.put("actor_3_facebook_likes", rand.nextInt(50));
+    randWeights.put("budget", rand.nextInt(50));
+    randWeights.put("director_facebook_likes", rand.nextInt(50));
+    randWeights.put("gross", rand.nextInt(50));
+    randWeights.put("num_critic_for_reviews", rand.nextInt(50));
+    randWeights.put("num_voted_users", rand.nextInt(50));
+    randWeights.put("threshold", rand.nextInt(50));
+
+  }
+
+  public static boolean mappingWorks(Map<String, Integer> movie, Map<String, Integer>randWeight){
+
+    int label = movie.get("gross");
+    int WIzero = randWeight.get("threshold")*(-1);
+    int WIactor1 = randWeight.get("actor_1_facebook_likes")*movie.get("actor_1_facebook_likes");
+    int WIactor2 = randWeight.get("actor_2_facebook_likes")*movie.get("actor_2_facebook_likes");
+    int WIactor3 = randWeight.get("actor_3_facebook_likes")*movie.get("actor_3_facebook_likes");
+    int WIbudget = randWeight.get("budget")*movie.get("budget");
+    int WIdirector = randWeight.get("director_facebook_likes")*movie.get("director_facebook_likes");
+    int WIcritics = randWeight.get("num_critic_for_reviews")*movie.get("num_critic_for_reviews");
+    int WIusers = randWeight.get("num_voted_users")*movie.get("num_voted_users");
+
+    int sigma = WIzero+WIactor1+WIactor3+WIbudget+WIdirector+WIcritics+WIusers;
+
+    if(label == 1){
+      if(sigma >= 0){
+        return true;
+      }
+      else{
+        return false;
+      }
+    }
+    else{
+      if(sigma < 0){
+        return true;
+      }
+      else{
+        return false;
+      }
+    }
+  }
+
+  public static void perceptronLearning(){
+    //createRandWeights();
+    //Map<String,Integer> randWeights = new HashMap<String, Integer>();
+    Map<String,Integer> randWeights = new HashMap<String, Integer>();
+    Random rand = new Random();
+
+    randWeights.put("actor_1_facebook_likes", rand.nextInt(50));
+    randWeights.put("actor_2_facebook_likes", rand.nextInt(50));
+    randWeights.put("actor_3_facebook_likes", rand.nextInt(50));
+    randWeights.put("budget", rand.nextInt(50));
+    randWeights.put("director_facebook_likes", rand.nextInt(50));
+    randWeights.put("gross", rand.nextInt(50));
+    randWeights.put("num_critic_for_reviews", rand.nextInt(50));
+    randWeights.put("num_voted_users", rand.nextInt(50));
+    randWeights.put("threshold", rand.nextInt(50));
+
+
+    while(!allClassified(randWeights)){
+
+      int i = 0;
+      while(i < movieListFormatted.size()){
+        if(!mappingWorks(movieListFormatted.get(i), randWeights)){
+          fixWeights(randWeights);
+          //break;
+        }
+        i++;
+      }
+    }
+  }
+
+
+
+
+
+
+
 }
