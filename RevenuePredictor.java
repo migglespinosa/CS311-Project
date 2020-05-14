@@ -303,15 +303,15 @@ public class RevenuePredictor{
       if(!mappingWorks(movieListFormatted.get(i), randWeights)){
         return false;
       }
-      i++
+      i++;
     }
     return true;
   }
 
-  public static void createRandWeights(){
+  public static Map<String,Integer> createRandWeights(){
 
     Random rand = new Random();
-    //Map<String,Integer> randWeights = new HashMap<String, Integer>();
+    Map<String,Integer> randWeights = new HashMap<String, Integer>();
 
     randWeights.put("actor_1_facebook_likes", rand.nextInt(50));
     randWeights.put("actor_2_facebook_likes", rand.nextInt(50));
@@ -323,6 +323,7 @@ public class RevenuePredictor{
     randWeights.put("num_voted_users", rand.nextInt(50));
     randWeights.put("threshold", rand.nextInt(50));
 
+    return randWeights;
   }
 
   public static boolean mappingWorks(Map<String, Integer> movie, Map<String, Integer>randWeight){
@@ -358,28 +359,17 @@ public class RevenuePredictor{
   }
 
   public static void perceptronLearning(){
-    //createRandWeights();
-    //Map<String,Integer> randWeights = new HashMap<String, Integer>();
-    Map<String,Integer> randWeights = new HashMap<String, Integer>();
-    Random rand = new Random();
-
-    randWeights.put("actor_1_facebook_likes", rand.nextInt(50));
-    randWeights.put("actor_2_facebook_likes", rand.nextInt(50));
-    randWeights.put("actor_3_facebook_likes", rand.nextInt(50));
-    randWeights.put("budget", rand.nextInt(50));
-    randWeights.put("director_facebook_likes", rand.nextInt(50));
-    randWeights.put("gross", rand.nextInt(50));
-    randWeights.put("num_critic_for_reviews", rand.nextInt(50));
-    randWeights.put("num_voted_users", rand.nextInt(50));
-    randWeights.put("threshold", rand.nextInt(50));
-
+    
+    Map<String,Integer> randWeights = createRandWeights();
+    System.out.println("randWeights: "+randWeights);
 
     while(!allClassified(randWeights)){
 
       int i = 0;
       while(i < movieListFormatted.size()){
         if(!mappingWorks(movieListFormatted.get(i), randWeights)){
-          fixWeights(randWeights);
+            break;
+          //fixWeights(randWeights); #TO DO!!!!!!
           //break;
         }
         i++;
