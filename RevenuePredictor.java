@@ -14,14 +14,14 @@ import java.util.Random;
 public class RevenuePredictor{
 
   static Map<Integer,Double> cpiMap = new HashMap<Integer, Double>();
-  static List<Map<String, Integer>> movieList = new ArrayList<Map<String, Integer>>();
-  static List<Map<String, Integer>> movieListAdjusted = new ArrayList<Map<String, Integer>>();
-  static List<Map<String, Integer>> movieListFormatted = new ArrayList<Map<String, Integer>>();
-  static Map<String, Integer> movieListAverages = new HashMap<String, Integer>();
+  static List<Map<String,Integer>> movieList = new ArrayList<Map<String,Integer>>();
+  static List<Map<String,Integer>> movieListAdjusted = new ArrayList<Map<String,Integer>>();
+  static List<Map<String,Integer>> movieListFormatted = new ArrayList<Map<String,Integer>>();
+  static Map<String,Integer> movieListAverages = new HashMap<String,Integer>();
   static int[] missingYears = new int[]{2015, 2016, 2017, 2018, 2019, 2020};
   static double[] missingCPIs = new double[]{233.707, 236.916, 242.839, 247.876, 251.712, 257.971};
   static double learningRate = 0.2;
-  //static Map<String,Integer> randWeights = new HashMap<String, Integer>();
+  //static Map<String,Integer> randWeights = new HashMap<String,Integer>();
 
   public static void main(String[] args) throws Exception{
 
@@ -136,7 +136,7 @@ public class RevenuePredictor{
     int movieSize = movieList.size();
     for(int i = 0; i < movieSize; i++){
 
-      Map<String,Integer> record = new HashMap<String, Integer>(movieList.get(i));
+      Map<String,Integer> record = new HashMap<String,Integer>(movieList.get(i));
 
       int year = record.get("year");
       int adjustedBudget = (int)adjustInflation(record.get("budget"), year);
@@ -163,7 +163,7 @@ public class RevenuePredictor{
 
     for(int i = 0; i < movieSize; i++){
 
-      Map<String,Integer> record = new HashMap<String, Integer>(movieListAdjusted.get(i));
+      Map<String,Integer> record = new HashMap<String,Integer>(movieListAdjusted.get(i));
 
       director_accumulate += record.get("director_facebook_likes");
       actor1_accumulate += record.get("actor_1_facebook_likes");
@@ -189,8 +189,8 @@ public class RevenuePredictor{
 
     int movieSize = movieList.size();
     for(int i = 0; i < movieSize; i++){
-      Map<String,Integer> record = new HashMap<String, Integer>(movieListAdjusted.get(i));
-      Map<String,Integer> formattedRecord = new HashMap<String, Integer>();
+      Map<String,Integer> record = new HashMap<String,Integer>(movieListAdjusted.get(i));
+      Map<String,Integer> formattedRecord = new HashMap<String,Integer>();
 
       int actor1 = compareActor1(record.get("actor_1_facebook_likes"));
       int actor2 = compareActor2(record.get("actor_2_facebook_likes"));
@@ -280,7 +280,7 @@ public class RevenuePredictor{
 
   public static void populateMovieList(String[] lineArray){
 
-    Map<String,Integer> record = new HashMap<String, Integer>();
+    Map<String,Integer> record = new HashMap<String,Integer>();
 
     record.put("num_critic_for_reviews", Integer.parseInt(lineArray[2]));
     record.put("director_facebook_likes", Integer.parseInt(lineArray[4]));
@@ -297,7 +297,7 @@ public class RevenuePredictor{
 
   //------------------*** PERCEPTRON LEARNING ***----------------------------//
 
-  public static boolean allClassified(Map<String, Integer>randWeights){
+  public static boolean allClassified(Map<String,Double>randWeights){
 
     int i = 0;
     while(i < movieListFormatted.size()){
@@ -309,42 +309,42 @@ public class RevenuePredictor{
     return true;
   }
 
-  public static Map<String,Integer> createRandWeights(){
+  public static Map<String,Double> createRandWeights(){
 
     Random rand = new Random();
-    Map<String,Integer> randWeights = new HashMap<String, Integer>();
+    Map<String,Double> randWeights = new HashMap<String,Double>();
 
-    randWeights.put("actor_1_facebook_likes", rand.nextInt(50));
-    randWeights.put("actor_2_facebook_likes", rand.nextInt(50));
-    randWeights.put("actor_3_facebook_likes", rand.nextInt(50));
-    randWeights.put("budget", rand.nextInt(50));
-    randWeights.put("director_facebook_likes", rand.nextInt(50));
-    randWeights.put("gross", rand.nextInt(50));
-    randWeights.put("num_critic_for_reviews", rand.nextInt(50));
-    randWeights.put("num_voted_users", rand.nextInt(50));
-    randWeights.put("threshold", rand.nextInt(50));
+    randWeights.put("actor_1_facebook_likes", rand.nextDouble()*rand.nextInt(50));
+    randWeights.put("actor_2_facebook_likes", rand.nextDouble()*rand.nextInt(50));
+    randWeights.put("actor_3_facebook_likes", rand.nextDouble()*rand.nextInt(50));
+    randWeights.put("budget", rand.nextDouble()*rand.nextInt(50));
+    randWeights.put("director_facebook_likes", rand.nextDouble()*rand.nextInt(50));
+    randWeights.put("gross", rand.nextDouble()*rand.nextInt(50));
+    randWeights.put("num_critic_for_reviews", rand.nextDouble()*rand.nextInt(50));
+    randWeights.put("num_voted_users", rand.nextDouble()*rand.nextInt(50));
+    randWeights.put("threshold", rand.nextDouble()*rand.nextInt(50));
 
     return randWeights;
   }
 
-  public static Integer findSigma(Map<String, Integer> movie, Map<String, Integer>weights) {
-      int WIzero = weights.get("threshold")*(-1);
-      int WIactor1 = weights.get("actor_1_facebook_likes")*movie.get("actor_1_facebook_likes");
-      int WIactor2 = weights.get("actor_2_facebook_likes")*movie.get("actor_2_facebook_likes");
-      int WIactor3 = weights.get("actor_3_facebook_likes")*movie.get("actor_3_facebook_likes");
-      int WIbudget = weights.get("budget")*movie.get("budget");
-      int WIdirector = weights.get("director_facebook_likes")*movie.get("director_facebook_likes");
-      int WIcritics = weights.get("num_critic_for_reviews")*movie.get("num_critic_for_reviews");
-      int WIusers = weights.get("num_voted_users")*movie.get("num_voted_users");
+  public static Double findSigma(Map<String,Integer> movie, Map<String,Double>weights) {
+      double WIzero = weights.get("threshold")*(-1);
+      double WIactor1 = weights.get("actor_1_facebook_likes")*Double.valueOf(movie.get("actor_1_facebook_likes"));
+      double WIactor2 = weights.get("actor_2_facebook_likes")*Double.valueOf(movie.get("actor_2_facebook_likes"));
+      double WIactor3 = weights.get("actor_3_facebook_likes")*Double.valueOf(movie.get("actor_3_facebook_likes"));
+      double WIbudget = weights.get("budget")*Double.valueOf(movie.get("budget"));
+      double WIdirector = weights.get("director_facebook_likes")*Double.valueOf(movie.get("director_facebook_likes"));
+      double WIcritics = weights.get("num_critic_for_reviews")*Double.valueOf(movie.get("num_critic_for_reviews"));
+      double WIusers = weights.get("num_voted_users")*Double.valueOf(movie.get("num_voted_users"));
 
-      int sigma = WIzero+WIactor1+WIactor3+WIbudget+WIdirector+WIcritics+WIusers;
+      double sigma = WIzero+WIactor1+WIactor3+WIbudget+WIdirector+WIcritics+WIusers;
       return sigma;
   }
 
-  public static boolean mappingWorks(Map<String, Integer> movie, Map<String, Integer>randWeights){
+  public static boolean mappingWorks(Map<String,Integer> movie, Map<String,Double>randWeights){
 
-    int label = movie.get("gross");
-    int sigma = findSigma(movie, randWeights);
+    double label = movie.get("gross");
+    double sigma = findSigma(movie, randWeights);
 
     if(label == 1){
       if(sigma >= 0){
@@ -366,7 +366,7 @@ public class RevenuePredictor{
 
 public static void perceptronLearning(){
 
-    Map<String,Integer> randWeights = createRandWeights();
+    Map<String,Double> randWeights = createRandWeights();
     // System.out.println("randWeights: "+randWeights);
     int maxEpochs = 5;
     int currentEpoch = 0;
@@ -383,30 +383,39 @@ public static void perceptronLearning(){
     }
 }
 
-  public static Map<String,Integer> fixWeights(Map<String,Integer> oldWeights, int movieIndex){
+  public static Map<String,Double> fixWeights(Map<String,Double> oldWeights, int movieIndex){
 
-      Map<String, Integer> movie = movieListFormatted.get(movieIndex);
-      int target = movie.get("gross");
-      int output = 5;
+      Map<String,Integer> movie = movieListFormatted.get(movieIndex);
+      double target = movie.get("gross");
+      double output = 5;
       if (findSigma(movie, oldWeights) >= 0) {
           output = 1;
       } else {
           output = 0;
       }
 
-      int newZero = oldWeights.get("threshold") + (learningRate*(-1) * (target-output));
-      int actor1NewWeight = oldWeights.get("actor_1_facebook_likes") + (learningRate * movie.get("actor_1_facebook_likes" * (target-output)));
-      int actor2NewWeight = oldWeights.get("actor_2_facebook_likes") + (learningRate * movie.get("actor_2_facebook_likes" * (target-output)));
-      int actor3NewWeight = oldWeights.get("actor_3_facebook_likes") + (learningRate * movie.get("actor_3_facebook_likes" * (target-output)));
-      int budgetNewWeight = oldWeights.get("budget") + (learningRate * movie.get("budget" * (target-output)));
-      int directorNewWeight = oldWeights.get("director_facebook_likes") + (learningRate * movie.get("director_facebook_likes" * (target-output)));
-      int criticsNewWeight = oldWeights.get("num_critic_for_reviews") + (learningRate * movie.get("num_critic_for_reviews" * (target-output)));
-      int usersNewWeight = oldWeights.get("num_voted_users") + (learningRate * movie.get("num_voted_users" * (target-output)));
+      double newZero = oldWeights.get("threshold") + (learningRate*(-1) * (target-output));
+      double actor1NewWeight = oldWeights.get("actor_1_facebook_likes") + (learningRate * Double.valueOf(movie.get("actor_1_facebook_likes") * (target-output)));
+      double actor2NewWeight = oldWeights.get("actor_2_facebook_likes") + (learningRate * Double.valueOf(movie.get("actor_2_facebook_likes") * (target-output)));
+      double actor3NewWeight = oldWeights.get("actor_3_facebook_likes") + (learningRate * Double.valueOf(movie.get("actor_3_facebook_likes") * (target-output)));
+      double budgetNewWeight = oldWeights.get("budget") + (learningRate * Double.valueOf(movie.get("budget") * (target-output)));
+      double directorNewWeight = oldWeights.get("director_facebook_likes") + (learningRate * Double.valueOf(movie.get("director_facebook_likes") * (target-output)));
+      double criticsNewWeight = oldWeights.get("num_critic_for_reviews") + (learningRate * Double.valueOf(movie.get("num_critic_for_reviews") * (target-output)));
+      double usersNewWeight = oldWeights.get("num_voted_users") + (learningRate * Double.valueOf(movie.get("num_voted_users") * (target-output)));
+
+      Map<String,Double> newWeights = new HashMap<String,Double>();
+      newWeights.put("actor_1_facebook_likes",actor1NewWeight);
+      newWeights.put("actor_2_facebook_likes",actor2NewWeight);
+      newWeights.put("actor_1_facebook_likes",actor1NewWeight);
+      newWeights.put("budget", budgetNewWeight);
+      newWeights.put("director_facebook_likes",directorNewWeight);
+      newWeights.put("num_critic_for_reviews",criticsNewWeight);
+      newWeights.put("num_voted_users",usersNewWeight);
 
       return newWeights;
   }
 
-  public double evaluate(Map<String,Integer> testingWeights){
+  public double evaluate(Map<String,Double> testingWeights){
       //TO DO
       return 0.0;
   }
