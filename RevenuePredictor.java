@@ -20,6 +20,7 @@ public class RevenuePredictor{
   static Map<String, Integer> movieListAverages = new HashMap<String, Integer>();
   static int[] missingYears = new int[]{2015, 2016, 2017, 2018, 2019, 2020};
   static double[] missingCPIs = new double[]{233.707, 236.916, 242.839, 247.876, 251.712, 257.971};
+  static double learningRate = 0.2;
   //static Map<String,Integer> randWeights = new HashMap<String, Integer>();
 
   public static void main(String[] args) throws Exception{
@@ -326,19 +327,24 @@ public class RevenuePredictor{
     return randWeights;
   }
 
-  public static boolean mappingWorks(Map<String, Integer> movie, Map<String, Integer>randWeight){
+  public static Integer findSigma(Map<String, Integer> movie, Map<String, Integer>weights) {
+      int WIzero = weights.get("threshold")*(-1);
+      int WIactor1 = weights.get("actor_1_facebook_likes")*movie.get("actor_1_facebook_likes");
+      int WIactor2 = weights.get("actor_2_facebook_likes")*movie.get("actor_2_facebook_likes");
+      int WIactor3 = weights.get("actor_3_facebook_likes")*movie.get("actor_3_facebook_likes");
+      int WIbudget = weights.get("budget")*movie.get("budget");
+      int WIdirector = weights.get("director_facebook_likes")*movie.get("director_facebook_likes");
+      int WIcritics = weights.get("num_critic_for_reviews")*movie.get("num_critic_for_reviews");
+      int WIusers = weights.get("num_voted_users")*movie.get("num_voted_users");
+
+      int sigma = WIzero+WIactor1+WIactor3+WIbudget+WIdirector+WIcritics+WIusers;
+      return sigma;
+  }
+
+  public static boolean mappingWorks(Map<String, Integer> movie, Map<String, Integer>randWeights){
 
     int label = movie.get("gross");
-    int WIzero = randWeight.get("threshold")*(-1);
-    int WIactor1 = randWeight.get("actor_1_facebook_likes")*movie.get("actor_1_facebook_likes");
-    int WIactor2 = randWeight.get("actor_2_facebook_likes")*movie.get("actor_2_facebook_likes");
-    int WIactor3 = randWeight.get("actor_3_facebook_likes")*movie.get("actor_3_facebook_likes");
-    int WIbudget = randWeight.get("budget")*movie.get("budget");
-    int WIdirector = randWeight.get("director_facebook_likes")*movie.get("director_facebook_likes");
-    int WIcritics = randWeight.get("num_critic_for_reviews")*movie.get("num_critic_for_reviews");
-    int WIusers = randWeight.get("num_voted_users")*movie.get("num_voted_users");
-
-    int sigma = WIzero+WIactor1+WIactor3+WIbudget+WIdirector+WIcritics+WIusers;
+    int sigma = findSigma(movie, randWeights);
 
     if(label == 1){
       if(sigma >= 0){
@@ -358,24 +364,56 @@ public class RevenuePredictor{
     }
   }
 
-  public static void perceptronLearning(){
-    
+public static void perceptronLearning(){
+
     Map<String,Integer> randWeights = createRandWeights();
-    System.out.println("randWeights: "+randWeights);
+    // System.out.println("randWeights: "+randWeights);
+    int maxEpochs = 5;
+    int currentEpoch = 0;
+    while(!allClassified(randWeights) && currentEpoch < maxEpochs){
 
-    while(!allClassified(randWeights)){
-
-      int i = 0;
-      while(i < movieListFormatted.size()){
-        if(!mappingWorks(movieListFormatted.get(i), randWeights)){
-            break;
-          //fixWeights(randWeights); #TO DO!!!!!!
-          //break;
+        int i = 0;
+        while(i < movieListFormatted.size()){
+            if(!mappingWorks(movieListFormatted.get(i), randWeights)){
+            randWeights = fixWeights(randWeights, i);
+            }
+            i++;
         }
-        i++;
-      }
+        currentEpoch++;
     }
+}
+
+  public static Map<String,Integer> fixWeights(Map<String,Integer> oldWeights, int movieIndex){
+
+      Map<String, Integer> movie = movieListFormatted.get(movieIndex);
+      int target = movie.get("gross");
+      int output = 5;
+      if (findSigma(movie, oldWeights) >= 0) {
+          output = 1;
+      } else {
+          output = 0;
+      }
+
+      int newZero = oldWeights.get("threshold") + (learningRate*(-1) * (target-output));
+      int actor1NewWeight = oldWeights.get("actor_1_facebook_likes") + (learningRate * movie.get("actor_1_facebook_likes" * (target-output)));
+      int actor2NewWeight = oldWeights.get("actor_2_facebook_likes") + (learningRate * movie.get("actor_2_facebook_likes" * (target-output)));
+      int actor3NewWeight = oldWeights.get("actor_3_facebook_likes") + (learningRate * movie.get("actor_3_facebook_likes" * (target-output)));
+      int budgetNewWeight = oldWeights.get("budget") + (learningRate * movie.get("budget" * (target-output)));
+      int directorNewWeight = oldWeights.get("director_facebook_likes") + (learningRate * movie.get("director_facebook_likes" * (target-output)));
+      int criticsNewWeight = oldWeights.get("num_critic_for_reviews") + (learningRate * movie.get("num_critic_for_reviews" * (target-output)));
+      int usersNewWeight = oldWeights.get("num_voted_users") + (learningRate * movie.get("num_voted_users" * (target-output)));
+
+      return newWeights;
   }
+
+  public double evaluate(Map<String,Integer> testingWeights){
+      //TO DO
+      return 0.0;
+  }
+
+  // TO DO:
+  // Make sure the following functions work for test data as well, and update
+  // main method accordingly. Also fix main method to run evaluate as well.
 
 
 
