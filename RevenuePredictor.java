@@ -23,7 +23,7 @@ public class RevenuePredictor{
   static List<Map<String,Integer>> testMovieListFormatted = new ArrayList<Map<String,Integer>>();
   static int[] missingYears = new int[]{2015, 2016, 2017, 2018, 2019, 2020};
   static double[] missingCPIs = new double[]{233.707, 236.916, 242.839, 247.876, 251.712, 257.971};
-  static double learningRate = 0.2;
+  static double learningRate = 0.02;
   //static Map<String,Integer> randWeights = new HashMap<String,Integer>();
 
   public static void main(String[] args) throws Exception{
