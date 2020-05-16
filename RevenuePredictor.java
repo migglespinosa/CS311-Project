@@ -378,10 +378,11 @@ public static Map<String,Double> perceptronLearning(){
     int maxEpochs = 5;
     int currentEpoch = 0;
     while(!allClassified(randWeights) && currentEpoch < maxEpochs){
-        System.out.println("-----------Epoch: "+currentEpoch+"----------");
+        // System.out.println("-----------Epoch: "+currentEpoch+"----------");
         int i = 0;
         while(i < movieListFormatted.size()){
-            System.out.println("movie index: "+i);
+            // System.out.println("movie index: "+i);
+            // System.out.println("current weights:"+randWeights);
             if(!mappingWorks(movieListFormatted.get(i), randWeights)){
             randWeights = fixWeights(randWeights, i);
             }
@@ -413,9 +414,10 @@ public static Map<String,Double> perceptronLearning(){
       double usersNewWeight = oldWeights.get("num_voted_users") + (learningRate * Double.valueOf(movie.get("num_voted_users") * (target-output)));
 
       Map<String,Double> newWeights = new HashMap<String,Double>();
+      newWeights.put("threshold",newZero);
       newWeights.put("actor_1_facebook_likes",actor1NewWeight);
       newWeights.put("actor_2_facebook_likes",actor2NewWeight);
-      newWeights.put("actor_1_facebook_likes",actor1NewWeight);
+      newWeights.put("actor_3_facebook_likes",actor3NewWeight);
       newWeights.put("budget", budgetNewWeight);
       newWeights.put("director_facebook_likes",directorNewWeight);
       newWeights.put("num_critic_for_reviews",criticsNewWeight);
@@ -456,14 +458,8 @@ public static Map<String,Double> perceptronLearning(){
       System.out.println("Precision (neg): "+negCorrect+"/"+negClassified+"= "+(negPrecision*100)+"%");
   }
 
-  // TO DO:
-  // Make sure the following functions work for test data as well, and update
-  // main method accordingly. Also fix main method to run evaluate as well.
 
-
-
-
-
+  
 
 
 }
