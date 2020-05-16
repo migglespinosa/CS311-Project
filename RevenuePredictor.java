@@ -18,6 +18,9 @@ public class RevenuePredictor{
   static List<Map<String,Integer>> movieListAdjusted = new ArrayList<Map<String,Integer>>();
   static List<Map<String,Integer>> movieListFormatted = new ArrayList<Map<String,Integer>>();
   static Map<String,Integer> movieListAverages = new HashMap<String,Integer>();
+  static List<Map<String,Integer>> testMovieList = new ArrayList<Map<String,Integer>>();
+  static List<Map<String,Integer>> testMovieListAdjusted = new ArrayList<Map<String,Integer>>();
+  static List<Map<String,Integer>> testMovieListFormatted = new ArrayList<Map<String,Integer>>();
   static int[] missingYears = new int[]{2015, 2016, 2017, 2018, 2019, 2020};
   static double[] missingCPIs = new double[]{233.707, 236.916, 242.839, 247.876, 251.712, 257.971};
   static double learningRate = 0.2;
@@ -25,12 +28,16 @@ public class RevenuePredictor{
 
   public static void main(String[] args) throws Exception{
 
-    initializeMovies();
+    initializeMovies(movieList, 0, 4000);
     initializeCPI();
-    createAdjusted();
+    createAdjusted(movieList, movieListAdjusted);
     createAverages();
-    formatData();
-    perceptronLearning();
+    formatData(movieList, movieListAdjusted, movieListFormatted);
+    initializeMovies(testMovieList, 4001, 5000);
+    createAdjusted(testMovieList, testMovieListAdjusted);
+    formatData(testMovieList, testMovieListAdjusted, testMovieListFormatted);
+    Map<String,Double> testWeights = perceptronLearning();
+    evaluate(testWeights);
     //System.out.println("movieListFormatted: "+movieListFormatted);
 
   }
@@ -131,12 +138,12 @@ public class RevenuePredictor{
     return false;
   }
 
-  public static void createAdjusted(){
+  public static void createAdjusted(List<Map<String,Integer>> MovieList, List<Map<String,Integer>> MovieListAdjusted){
 
-    int movieSize = movieList.size();
+    int movieSize = MovieList.size();
     for(int i = 0; i < movieSize; i++){
 
-      Map<String,Integer> record = new HashMap<String,Integer>(movieList.get(i));
+      Map<String,Integer> record = new HashMap<String,Integer>(MovieList.get(i));
 
       int year = record.get("year");
       int adjustedBudget = (int)adjustInflation(record.get("budget"), year);
@@ -145,7 +152,7 @@ public class RevenuePredictor{
       record.replace("budget", adjustedBudget);
       record.replace("gross", adjustedGross);
 
-      movieListAdjusted.add(0, record);
+      MovieListAdjusted.add(0, record);
     }
   }
 
@@ -185,11 +192,11 @@ public class RevenuePredictor{
     movieListAverages.put("gross_avg", (int)gross_accumulate/movieSize);
   }
 
-  public static void formatData(){
+  public static void formatData(List<Map<String,Integer>> MovieList, List<Map<String,Integer>> MovieListAdjusted, List<Map<String,Integer>> MovieListFormatted){
 
-    int movieSize = movieList.size();
+    int movieSize = MovieList.size();
     for(int i = 0; i < movieSize; i++){
-      Map<String,Integer> record = new HashMap<String,Integer>(movieListAdjusted.get(i));
+      Map<String,Integer> record = new HashMap<String,Integer>(MovieListAdjusted.get(i));
       Map<String,Integer> formattedRecord = new HashMap<String,Integer>();
 
       int actor1 = compareActor1(record.get("actor_1_facebook_likes"));
@@ -210,7 +217,7 @@ public class RevenuePredictor{
       formattedRecord.put("num_critic_for_reviews", critics);
       formattedRecord.put("num_voted_users", voted_users);
 
-      movieListFormatted.add(formattedRecord);
+      MovieListFormatted.add(formattedRecord);
     }
 
 
@@ -235,20 +242,20 @@ public class RevenuePredictor{
     populateCPIMissing();
   }
 
-  public static void initializeMovies() throws Exception{
+  public static void initializeMovies(List<Map<String,Integer>> MovieList, int initCount, int maxCount) throws Exception{
 
     String line = "";
     String splitBy = ",";
-    int count = 0;
+    int count = initCount;
 
     BufferedReader br = new BufferedReader(new FileReader("movie_metadata.csv"));
     br.readLine();
-    while (count <= 4000 && (line = br.readLine()) != null){
+    while (count <= maxCount && (line = br.readLine()) != null){
 
       String[] lineArray = line.split(splitBy);
 
       if(!containsNull(lineArray)){
-        populateMovieList(lineArray);
+        populateMovieList(lineArray, MovieList);
         count++;
       }
     }
@@ -278,7 +285,7 @@ public class RevenuePredictor{
     }
   }
 
-  public static void populateMovieList(String[] lineArray){
+  public static void populateMovieList(String[] lineArray, List<Map<String,Integer>> MovieList){
 
     Map<String,Integer> record = new HashMap<String,Integer>();
 
@@ -292,7 +299,7 @@ public class RevenuePredictor{
     record.put("year", Integer.parseInt(lineArray[23]));
     record.put("actor_2_facebook_likes", Integer.parseInt(lineArray[24]));
 
-    movieList.add(0, record);
+    MovieList.add(0, record);
   }
 
   //------------------*** PERCEPTRON LEARNING ***----------------------------//
@@ -364,16 +371,17 @@ public class RevenuePredictor{
     }
   }
 
-public static void perceptronLearning(){
+public static Map<String,Double> perceptronLearning(){
 
     Map<String,Double> randWeights = createRandWeights();
     // System.out.println("randWeights: "+randWeights);
     int maxEpochs = 5;
     int currentEpoch = 0;
     while(!allClassified(randWeights) && currentEpoch < maxEpochs){
-
+        System.out.println("-----------Epoch: "+currentEpoch+"----------");
         int i = 0;
         while(i < movieListFormatted.size()){
+            System.out.println("movie index: "+i);
             if(!mappingWorks(movieListFormatted.get(i), randWeights)){
             randWeights = fixWeights(randWeights, i);
             }
@@ -381,6 +389,7 @@ public static void perceptronLearning(){
         }
         currentEpoch++;
     }
+    return randWeights;
 }
 
   public static Map<String,Double> fixWeights(Map<String,Double> oldWeights, int movieIndex){
@@ -415,9 +424,36 @@ public static void perceptronLearning(){
       return newWeights;
   }
 
-  public double evaluate(Map<String,Double> testingWeights){
-      //TO DO
-      return 0.0;
+  public static void evaluate(Map<String,Double> testingWeights){
+      double posClassified = 0;
+      double posCorrect = 0;
+      double negClassified = 0;
+      double negCorrect = 0;
+
+      int movieIndex = 0;
+      while (movieIndex < testMovieListFormatted.size()) {
+          Map<String,Integer> movie = testMovieListFormatted.get(movieIndex);
+          if (movie.get("gross") == 1) {
+              posClassified ++;
+              if (mappingWorks(movie, testingWeights)) {
+                  posCorrect ++;
+              }
+          } else {
+              negClassified ++;
+              if (mappingWorks(movie, testingWeights)) {
+                  negCorrect ++;
+              }
+          }
+
+          movieIndex++;
+      }
+      double accuracy = (posCorrect+negCorrect) / (posClassified+negClassified);
+      double posPrecision = posCorrect / posClassified;
+      double negPrecision = negCorrect / negClassified;
+
+      System.out.println("Accuracy: "+(posCorrect+negCorrect)+"/"+(posClassified+negClassified)+"= "+(accuracy*100)+"%");
+      System.out.println("Precision (pos): "+posCorrect+"/"+posClassified+"= "+(posPrecision*100)+"%");
+      System.out.println("Precision (neg): "+negCorrect+"/"+negClassified+"= "+(negPrecision*100)+"%");
   }
 
   // TO DO:
