@@ -375,7 +375,7 @@ public static Map<String,Double> perceptronLearning(){
 
     Map<String,Double> randWeights = createRandWeights();
     // System.out.println("randWeights: "+randWeights);
-    int maxEpochs = 5;
+    int maxEpochs = 50;
     int currentEpoch = 0;
     while(!allClassified(randWeights) && currentEpoch < maxEpochs){
         // System.out.println("-----------Epoch: "+currentEpoch+"----------");
@@ -459,7 +459,7 @@ public static Map<String,Double> perceptronLearning(){
   }
 
 
-  
+
 
 
 }
